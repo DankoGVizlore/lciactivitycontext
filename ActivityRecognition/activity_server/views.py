@@ -34,9 +34,12 @@ class RESTView(View):
             if 'uuid' not in request.GET:
                 raise Exception("Bad request")
 
-            record = recognize_last_activity(request.GET['uuid'],
-                                             request.GET['clf_type'] if 'clf_type' in request.GET else 'svc',
-                                             request.GET['clf_depth'] if 'clf_depth' in request.GET else 'shallow')
+            if 'time' in request.GET:
+                pass
+            else:
+                record = recognize_last_activity(request.GET['uuid'],
+                                                 request.GET['alg'] if 'alg' in request.GET else 'svc',
+                                                 request.GET['fg'] if 'fs' in request.GET else 'standard')
 
             response_text = "date_time:'%s', " % record.get("time")
 

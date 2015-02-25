@@ -1,6 +1,7 @@
 import numpy as np
 from activity_server.models import DataRecord, AcceleratorRecord, GyroscopeRecord
 from activity_server.utilities.statistics import get_features, get_features_acceleration
+from activity_server.utilities.statistics import get_enhanced_features, get_enhanced_features_acceleration
 from sklearn.externals import joblib
 from django.core.exceptions import ObjectDoesNotExist
 from scipy.interpolate import interp1d
@@ -12,8 +13,13 @@ svc_acc = joblib.load('activity_server/classifier/acc/classifier_svc.pkl')
 tree_acc_gyo = joblib.load('activity_server/classifier/acc_gyo/classifier_tree.pkl')
 tree_acc = joblib.load('activity_server/classifier/acc/classifier_tree.pkl')
 
+svc_acc_gyo_ech = joblib.load('activity_server/classifier/acc_gyo_ech/classifier_svc.pkl')
+svc_acc_ech = joblib.load('activity_server/classifier/acc_ech/classifier_svc.pkl')
+tree_acc_gyo_ech = joblib.load('activity_server/classifier/acc_gyo_ech/classifier_tree.pkl')
+tree_acc_ech = joblib.load('activity_server/classifier/acc_ech/classifier_tree.pkl')
 
-def recognize_last_activity(uuid, classifier_type, classification_depth):
+
+def recognize_last_activity(uuid, algorithm, feature_set):
 
     record = DataRecord.objects.filter(user_id=uuid).latest('record_date')
     acceleration_data = AcceleratorRecord.objects.filter(data_record=record.id).order_by("time_stamp")
@@ -21,20 +27,47 @@ def recognize_last_activity(uuid, classifier_type, classification_depth):
     try:
         gyroscope_data = GyroscopeRecord.objects.filter(data_record=record.id).order_by("time_stamp")
         t, x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo = process_data(acceleration_data, gyroscope_data)
-        data = get_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
-        if classifier_type == 'svc':
-            return {"vector": svc_acc_gyo.predict_proba(data)[0], "time": record.record_date}
-        elif classifier_type == 'tree':
-            return {"vector": tree_acc_gyo.predict_proba(data)[0], "time": record.record_date}
+
+        if feature_set == 'standard':
+            data = get_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
+            if algorithm == 'svc':
+                return {"vector": svc_acc_gyo.predict_proba(data)[0], "time": record.record_date}
+            elif algorithm == 'dt':
+                return {"vector": tree_acc_gyo.predict_proba(data)[0], "time": record.record_date}
+            else:
+                raise Exception('Invalid algorithm')
+        elif feature_set == 'enhanced':
+            data = get_enhanced_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
+            if algorithm == 'svc':
+                return {"vector": svc_acc_gyo_ech.predict_proba(data)[0], "time": record.record_date}
+            elif algorithm == 'dt':
+                return {"vector": tree_acc_gyo_ech.predict_proba(data)[0], "time": record.record_date}
+            else:
+                raise Exception('Invalid algorithm')
+        else:
+            raise Exception('Invalid feature set')
+
     except ObjectDoesNotExist:
         x, y, z, t = process_acceleration_data(acceleration_data)
-        data = get_features_acceleration(x, y, z)
-        if classifier_type == 'svc':
-            return {"vector": svc_acc.predict_proba(data)[0], "time": record.record_date}
-        elif classifier_type == 'tree':
-            return {"vector": tree_acc.predict_proba(data)[0], "time": record.record_date}
 
-    return None
+        if feature_set == 'standard':
+            data = get_features_acceleration(x, y, z)
+            if algorithm == 'svc':
+                return {"vector": svc_acc.predict_proba(data)[0], "time": record.record_date}
+            elif algorithm == 'dt':
+                return {"vector": tree_acc.predict_proba(data)[0], "time": record.record_date}
+            else:
+                raise Exception('Invalid algorithm')
+        elif feature_set == 'enhanced':
+            data = get_enhanced_features_acceleration(x, y, z)
+            if algorithm == 'svc':
+                return {"vector": svc_acc_ech.predict_proba(data)[0], "time": record.record_date}
+            elif algorithm == 'dt':
+                return {"vector": tree_acc_ech.predict_proba(data)[0], "time": record.record_date}
+            else:
+                raise Exception('Invalid algorithm')
+        else:
+            raise Exception('Invalid feature set')
 
 
 def butter_bandpass(low_cut, high_cut, fs, order=5):

@@ -322,9 +322,9 @@
             alert(classifier + classification_depth);
 
             $.ajax({
-                        url: 'http://localhost:55555/rest/',
+                        url: 'http://192.168.11.250:55555/rest/',
                         type: 'GET',
-                        data: 'uuid=123&clf_type=' + classifier + '&clf_depth=' + classification_depth,
+                        data: 'uuid=46cf6430e66df4b4&clf_type=' + classifier + '&clf_depth=' + classification_depth,
                         async: false,
                         complete: function (result) {
                             if (result.status == 0) {
