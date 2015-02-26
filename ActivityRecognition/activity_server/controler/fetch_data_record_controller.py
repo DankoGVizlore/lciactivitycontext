@@ -1,12 +1,12 @@
 import numpy as np
-from activity_server.models import DataRecord, AcceleratorRecord, GyroscopeRecord
+from activity_server.models import DataRecord, AcceleratorRecord, GyroscopeRecord, activity_table
 from activity_server.utilities.statistics import get_features, get_features_acceleration
 from activity_server.utilities.statistics import get_enhanced_features, get_enhanced_features_acceleration
 from sklearn.externals import joblib
 from django.core.exceptions import ObjectDoesNotExist
 from scipy.interpolate import interp1d
 from scipy.signal import butter, lfilter, medfilt
-
+from datetime import datetime, timedelta
 
 svc_acc_gyo = joblib.load('activity_server/classifier/acc_gyo/classifier_svc.pkl')
 svc_acc = joblib.load('activity_server/classifier/acc/classifier_svc.pkl')
@@ -22,6 +22,39 @@ tree_acc_ech = joblib.load('activity_server/classifier/acc_ech/classifier_tree.p
 def recognize_last_activity(uuid, algorithm, feature_set):
 
     record = DataRecord.objects.filter(user_id=uuid).latest('record_date')
+
+    prob = get_probability_for_data_record(record, feature_set, algorithm)
+    current_activity = activity_table.get(np.argmax(prob) + 1)
+
+    return {"vector": prob, "time": record.record_date, "current_activity": current_activity}
+
+
+def recognize_last_activities(uuid, algorithm, feature_set, delta_time):
+
+    datetime_point = datetime.now() - timedelta(seconds=delta_time)
+    records = DataRecord.objects.filter(user_id=uuid).filter(record_date__gt=datetime_point)
+
+    if records:
+        avg_prob = [0, 0, 0, 0, 0, 0, 0, 0]
+
+        current_activity = "none"
+
+        for j in xrange(len(records)):
+            prob = get_probability_for_data_record(records[j], feature_set, algorithm)
+
+            if j == 0:
+                current_activity = activity_table.get(np.argmax(prob) + 1)
+
+            for i in xrange(len(prob)):
+                avg_prob[i] += prob[i]/len(records)
+
+        return {"vector": avg_prob, "time": records[0].record_date, "current_activity": current_activity}
+    else:
+        raise Exception('No record found')
+
+
+def get_probability_for_data_record(record, feature_set, algorithm):
+
     acceleration_data = AcceleratorRecord.objects.filter(data_record=record.id).order_by("time_stamp")
 
     try:
@@ -31,17 +64,17 @@ def recognize_last_activity(uuid, algorithm, feature_set):
         if feature_set == 'standard':
             data = get_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
             if algorithm == 'svc':
-                return {"vector": svc_acc_gyo.predict_proba(data)[0], "time": record.record_date}
+                return svc_acc_gyo.predict_proba(data)[0]
             elif algorithm == 'dt':
-                return {"vector": tree_acc_gyo.predict_proba(data)[0], "time": record.record_date}
+                return tree_acc_gyo.predict_proba(data)[0]
             else:
                 raise Exception('Invalid algorithm')
         elif feature_set == 'enhanced':
             data = get_enhanced_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
             if algorithm == 'svc':
-                return {"vector": svc_acc_gyo_ech.predict_proba(data)[0], "time": record.record_date}
+                return svc_acc_gyo_ech.predict_proba(data)[0]
             elif algorithm == 'dt':
-                return {"vector": tree_acc_gyo_ech.predict_proba(data)[0], "time": record.record_date}
+                return tree_acc_gyo_ech.predict_proba(data)[0]
             else:
                 raise Exception('Invalid algorithm')
         else:
@@ -53,17 +86,17 @@ def recognize_last_activity(uuid, algorithm, feature_set):
         if feature_set == 'standard':
             data = get_features_acceleration(x, y, z)
             if algorithm == 'svc':
-                return {"vector": svc_acc.predict_proba(data)[0], "time": record.record_date}
+                return svc_acc.predict_proba(data)[0]
             elif algorithm == 'dt':
-                return {"vector": tree_acc.predict_proba(data)[0], "time": record.record_date}
+                return tree_acc.predict_proba(data)[0]
             else:
                 raise Exception('Invalid algorithm')
         elif feature_set == 'enhanced':
             data = get_enhanced_features_acceleration(x, y, z)
             if algorithm == 'svc':
-                return {"vector": svc_acc_ech.predict_proba(data)[0], "time": record.record_date}
+                return svc_acc_ech.predict_proba(data)[0]
             elif algorithm == 'dt':
-                return {"vector": tree_acc_ech.predict_proba(data)[0], "time": record.record_date}
+                return tree_acc_ech.predict_proba(data)[0]
             else:
                 raise Exception('Invalid algorithm')
         else:
