@@ -43,7 +43,6 @@ class RESTView(View):
 
             algorithm = request.GET['alg'] if 'alg' in request.GET else 'svm'
             feature_set = request.GET['fs'] if 'fs' in request.GET else 'standard'
-            time_point = int(request.GET['tp'])
             current_activity = request.GET["curr_act"] if 'curr_act' in request.GET else 'false'
             ac = request.GET['ac'] if 'ac' in request.GET else '1'
 
@@ -54,11 +53,11 @@ class RESTView(View):
                 record = recognize_last_activities(request.GET['uuid'],
                                                    algorithm,
                                                    feature_set,
-                                                   time_point)
+                                                   int(request.GET['tp']))
             else:
                 record = recognize_last_activity(request.GET['uuid'],
                                                  algorithm,
-                                                 time_point)
+                                                 feature_set)
 
             response_text = '{ date_time:"%s", ' % record.get("time")
             response_text += 'uuid : "%s",' % request.GET['uuid']
