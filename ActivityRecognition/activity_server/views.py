@@ -59,26 +59,26 @@ class RESTView(View):
                                                  algorithm,
                                                  feature_set)
 
-            response_text = '{ date_time:"%s", ' % record.get("time")
-            response_text += 'uuid : "%s",' % request.GET['uuid']
+            response_text = '{ "date_time":"%s", ' % record.get("time")
+            response_text += '"uuid" : "%s",' % request.GET['uuid']
 
             if current_activity == "true":
-                response_text += 'curr_act :  "%s",' % record.get("current_activity")
+                response_text += '"curr_act" :  "%s",' % record.get("current_activity")
             elif current_activity != "false":
                 raise Exception("Wrong value for curr_act")
 
             if algorithm == 'svm':
-                response_text += "svm_vector : {"
+                response_text += '"svm_vector" : {'
                 reduced_vec = reduce_activity_vector(record['vector'])
 
                 for i in xrange(len(reduced_vec)):
                     if i != len(reduced_vec) - 1:
-                        response_text += "%s:%s," % (reduced_activity_table_json.get(i+1), reduced_vec[i])
+                        response_text += '"%s":"%s",' % (reduced_activity_table_json.get(i+1), reduced_vec[i])
                     else:
-                        response_text += "%s:%s}" % (reduced_activity_table_json.get(i+1), reduced_vec[i])
+                        response_text += '"%s":"%s"}' % (reduced_activity_table_json.get(i+1), reduced_vec[i])
             else:
                 index = np.argmax(record['vector']) + 1
-                response_text += 'dt_category : "%s"' % activity_table_json.get(index)
+                response_text += '"dt_category" : "%s"' % activity_table_json.get(index)
 
             response_text += "}"
 
@@ -86,7 +86,7 @@ class RESTView(View):
             response.status_code = 200
             return response
         except Exception as e:
-            response = HttpResponse('{error:"%s"}' % e.message)
+            response = HttpResponse('{"error":"%s"}' % e.message)
             request.status_code = 404
             return response
 
