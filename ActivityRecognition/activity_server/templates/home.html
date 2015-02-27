@@ -8,7 +8,7 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript">
 
-        var algorithm = 'svc';
+        var algorithm = 'svm';
         var feature_set = 'standard';
 
         function test_post() {
@@ -319,14 +319,15 @@
 
         function test_get() {
 
-            alert(algorithm + feature_set);
-
             var tp = document.getElementById('delta_time').value
 
+            var curr_act = document.getElementById("current_activity");
+
+            alert('uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set + '&tp=' + tp+ "&curr_act=" + curr_act.checked);
             $.ajax({
                         url: 'http://localhost:55555/ac/',
                         type: 'GET',
-                        data: 'uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set + '&tp=' + tp,
+                        data: 'uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set + '&tp=' + tp+ "&curr_act=" + curr_act.checked,
                         async: false,
                         complete: function (result) {
                             if (result.status == 0) {
@@ -365,7 +366,7 @@
 
 <label>
     <select onchange="set_algorithm(this.value)">
-        <option value="svc">Support Vector Machine</option>
+        <option value="svm">Support Vector Machine</option>
         <option value="dt">Decision Tree Classifier</option>
     </select>
 </label>
@@ -378,6 +379,7 @@
 </label>
 
 <input id="delta_time" type="text" name="delta_time" value="10"><br>
+Current activity: <input id="current_activity" type="checkbox">
 
 </body>
 </html> 

@@ -1,5 +1,5 @@
 import numpy as np
-from activity_server.models import DataRecord, AcceleratorRecord, GyroscopeRecord, activity_table
+from activity_server.models import DataRecord, AcceleratorRecord, GyroscopeRecord, activity_table, activity_table_json
 from activity_server.utilities.statistics import get_features, get_features_acceleration
 from activity_server.utilities.statistics import get_enhanced_features, get_enhanced_features_acceleration
 from sklearn.externals import joblib
@@ -24,7 +24,7 @@ def recognize_last_activity(uuid, algorithm, feature_set):
     record = DataRecord.objects.filter(user_id=uuid).latest('record_date')
 
     prob = get_probability_for_data_record(record, feature_set, algorithm)
-    current_activity = activity_table.get(np.argmax(prob) + 1)
+    current_activity = activity_table_json.get(np.argmax(prob) + 1)
 
     return {"vector": prob, "time": record.record_date, "current_activity": current_activity}
 
@@ -43,7 +43,7 @@ def recognize_last_activities(uuid, algorithm, feature_set, delta_time):
             prob = get_probability_for_data_record(records[j], feature_set, algorithm)
 
             if j == 0:
-                current_activity = activity_table.get(np.argmax(prob) + 1)
+                current_activity = activity_table_json.get(np.argmax(prob) + 1)
 
             for i in xrange(len(prob)):
                 avg_prob[i] += prob[i]/len(records)
@@ -63,7 +63,7 @@ def get_probability_for_data_record(record, feature_set, algorithm):
 
         if feature_set == 'standard':
             data = get_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
-            if algorithm == 'svc':
+            if algorithm == 'svm':
                 return svc_acc_gyo.predict_proba(data)[0]
             elif algorithm == 'dt':
                 return tree_acc_gyo.predict_proba(data)[0]
@@ -71,7 +71,7 @@ def get_probability_for_data_record(record, feature_set, algorithm):
                 raise Exception('Invalid algorithm')
         elif feature_set == 'enhanced':
             data = get_enhanced_features(x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo)
-            if algorithm == 'svc':
+            if algorithm == 'svm':
                 return svc_acc_gyo_ech.predict_proba(data)[0]
             elif algorithm == 'dt':
                 return tree_acc_gyo_ech.predict_proba(data)[0]
@@ -85,7 +85,7 @@ def get_probability_for_data_record(record, feature_set, algorithm):
 
         if feature_set == 'standard':
             data = get_features_acceleration(x, y, z)
-            if algorithm == 'svc':
+            if algorithm == 'svm':
                 return svc_acc.predict_proba(data)[0]
             elif algorithm == 'dt':
                 return tree_acc.predict_proba(data)[0]
@@ -93,7 +93,7 @@ def get_probability_for_data_record(record, feature_set, algorithm):
                 raise Exception('Invalid algorithm')
         elif feature_set == 'enhanced':
             data = get_enhanced_features_acceleration(x, y, z)
-            if algorithm == 'svc':
+            if algorithm == 'svm':
                 return svc_acc_ech.predict_proba(data)[0]
             elif algorithm == 'dt':
                 return tree_acc_ech.predict_proba(data)[0]
