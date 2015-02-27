@@ -294,7 +294,7 @@
 
             $.ajax(
                     {
-                        url: 'http://localhost:55555/rest/',
+                        url: 'http://localhost:55555/ac/',
                         type: 'POST',
                         processData: false,
                         contentType: 'application/json; charset=utf-8',
@@ -324,7 +324,7 @@
             var tp = document.getElementById('delta_time').value
 
             $.ajax({
-                        url: 'http://localhost:55555/rest/',
+                        url: 'http://localhost:55555/ac/',
                         type: 'GET',
                         data: 'uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set + '&tp=' + tp,
                         async: false,

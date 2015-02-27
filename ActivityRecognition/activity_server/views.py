@@ -69,7 +69,7 @@ class RESTView(View):
             response.status_code = 200
             return response
         except Exception as e:
-            response = HttpResponse("{error:%s}" % e.message)
+            response = HttpResponse('{error:"%s"}' % e.message)
             request.status_code = 404
             return response
 
