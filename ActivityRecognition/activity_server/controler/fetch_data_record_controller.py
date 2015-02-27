@@ -59,6 +59,8 @@ def get_probability_for_data_record(record, feature_set, algorithm):
 
     try:
         gyroscope_data = GyroscopeRecord.objects.filter(data_record=record.id).order_by("time_stamp")
+        if not gyroscope_data:
+            raise ObjectDoesNotExist()
         t, x_acc, y_acc, z_acc, x_gyo, y_gyo, z_gyo = process_data(acceleration_data, gyroscope_data)
 
         if feature_set == 'standard':
@@ -171,7 +173,7 @@ def process_acceleration_data(sensor_data):
         x.append(sensor_data[i].x)
         y.append(sensor_data[i].y)
         z.append(sensor_data[i].z)
-        t.append(sensor_data[i].t)
+        t.append(sensor_data[i].time_stamp)
 
     x, y, z, t = resample_acceleration_data(x, y, z, t)
     x, y, z = filter_acceleration(x, y, z)
