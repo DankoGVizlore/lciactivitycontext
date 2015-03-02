@@ -213,7 +213,7 @@ def get_enhanced_features_acceleration(x_acc, y_acc, z_acc):
     xz_acc_cor = get_correlation(x_acc, z_acc, x_acc_mean, z_acc_mean, x_acc_std_dev, z_acc_std_dev)
     zy_acc_cor = get_correlation(z_acc, y_acc, z_acc_mean, y_acc_mean, z_acc_std_dev, y_acc_std_dev)
 
-    data = ndarray(shape=(1, 39), dtype=float)
+    data = ndarray(shape=(1, 21), dtype=float)
 
     data[0] = array([x_acc_mean, x_acc_energy, x_acc_std_dev,
                      x_acc_min, x_acc_max, x_acc_mad,

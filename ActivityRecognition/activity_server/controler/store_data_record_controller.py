@@ -3,7 +3,11 @@ from datetime import datetime
 
 
 def store_data_record(json_object):
-
+    """
+    Stores the data record reieved from an json object
+    :param json_object: json object containing the uuid, acceleration, location and wifi data
+    :raise Exception:
+    """
     if 'uuid' in json_object.keys() and \
        'acceleration' in json_object.keys() and \
        'gyroscope' in json_object.keys() and \
@@ -25,6 +29,12 @@ def store_data_record(json_object):
 
 def store_location_record(locations_object, data_object):
 
+    """
+    Stores the location data
+    :param locations_object: object containing the location information in json
+    :param data_object: the data object associated with the location data
+    :raise Exception:
+    """
     for location_record_json in locations_object:
         if 'timestamp' in location_record_json.keys() and 'coords' in location_record_json.keys():
             coords_json = location_record_json.get('coords')
@@ -41,6 +51,12 @@ def store_location_record(locations_object, data_object):
 
 
 def store_acceleration_record(acceleration_object, data_object):
+    """
+    Stores the acceleration data
+    :param acceleration_object: object containing the acceleration information in json
+    :param data_object: the data object associated with the acceleration data
+    :raise Exception:
+    """
     for i in range(len(acceleration_object)):
         if 'x' in acceleration_object[i].keys() and \
            'y' in acceleration_object[i].keys() and \
@@ -58,6 +74,12 @@ def store_acceleration_record(acceleration_object, data_object):
 
 
 def store_gyroscope_record(gyroscope_object, data_object):
+    """
+
+    :param gyroscope_object:
+    :param data_object:
+    :raise Exception:
+    """
     for i in range(len(gyroscope_object)):
         if 'x' in gyroscope_object[i].keys() and \
            'y' in gyroscope_object[i].keys() and \

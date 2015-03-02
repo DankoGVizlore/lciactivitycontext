@@ -21,6 +21,13 @@ tree_acc_ech = joblib.load('activity_server/classifier/acc_ech/classifier_tree.p
 
 def recognize_last_activity(uuid, algorithm, feature_set):
 
+    """
+    Recognises the last activity for the given user.
+    :param uuid: user id of the user
+    :param algorithm: the requested algorithm
+    :param feature_set: the requested feature set
+    :return: a dict consisting of a probability vector the time and the current activity
+    """
     record = DataRecord.objects.filter(user_id=uuid).latest('record_date')
 
     prob = get_probability_for_data_record(record, feature_set, algorithm)
@@ -31,6 +38,14 @@ def recognize_last_activity(uuid, algorithm, feature_set):
 
 def recognize_last_activities(uuid, algorithm, feature_set, delta_time):
 
+    """
+    Recognises the last activities within a time last delta_time seconds
+    :param uuid: user id of the user
+    :param algorithm: the requested algorithm
+    :param feature_set: the requested feature set
+    :param delta_time: the time in seconds
+    :return: a dict consisting of a probability vector the time and the current activity :raise Exception:
+    """
     datetime_point = datetime.now() - timedelta(seconds=delta_time)
     records = DataRecord.objects.filter(user_id=uuid).filter(record_date__gt=datetime_point)
 
@@ -55,6 +70,13 @@ def recognize_last_activities(uuid, algorithm, feature_set, delta_time):
 
 def get_probability_for_data_record(record, feature_set, algorithm):
 
+    """
+    Get the probability for the given data record
+    :param record: the data record
+    :param feature_set: the feature set
+    :param algorithm: the algorithm
+    :return: a probability vector :raise Exception:
+    """
     acceleration_data = AcceleratorRecord.objects.filter(data_record=record.id).order_by("time_stamp")
 
     try:
@@ -114,12 +136,28 @@ def butter_bandpass(low_cut, high_cut, fs, order=5):
 
 
 def butter_bandpass_filter(x, low_cut, high_cut, fs, order=5):
+    """
+    Filters using a bandpass butterworth filter
+    :param x: raw data
+    :param low_cut: low cut frequency
+    :param high_cut: high cut frequency
+    :param fs: sample frequency
+    :param order: order of the filter
+    :return:
+    """
     b, a = butter_bandpass(low_cut, high_cut, fs, order=order)
     y = lfilter(b, a, x)
     return y
 
 
 def filter_acceleration(x, y, z):
+    """
+    Filters the acceleration data
+    :param x: raw acceleration data
+    :param y: raw acceleration data
+    :param z: raw acceleration data
+    :return: filtered acceleration data
+    """
     x = medfilt(np.array(x))
     y = medfilt(np.array(y))
     z = medfilt(np.array(z))
@@ -132,6 +170,13 @@ def filter_acceleration(x, y, z):
 
 
 def filter_gyroscope(x, y, z):
+    """
+    Filters the gyroscope data
+    :param x: Raw gyroscope data
+    :param y: Raw gyroscope data
+    :param z: Raw gyroscope data
+    :return: filtered gyroscope data
+    """
     x = medfilt(np.array(x))
     y = medfilt(np.array(y))
     z = medfilt(np.array(z))
@@ -145,6 +190,14 @@ def filter_gyroscope(x, y, z):
 
 def resample_acceleration_data(x, y, z, t):
 
+    """
+    Resampling of acceleration data
+    :param x: raw acceleration data
+    :param y: raw acceleration data
+    :param z: raw acceleration data
+    :param t: timestamp
+    :return: resampled acceleration data
+    """
     t_begin = t[0]
     t_end = t[-1]
 
@@ -164,6 +217,11 @@ def resample_acceleration_data(x, y, z, t):
 
 
 def process_acceleration_data(sensor_data):
+    """
+    Processes the acceleration data
+    :param sensor_data: raw acceleration data
+    :return: processed acceleration data
+    """
     x = []
     y = []
     z = []
@@ -175,7 +233,7 @@ def process_acceleration_data(sensor_data):
         z.append(sensor_data[i].z)
         t.append(sensor_data[i].time_stamp)
 
-    x, y, z, t = resample_acceleration_data(x, y, z, t)
+    t, x, y, z = resample_acceleration_data(x, y, z, t)
     x, y, z = filter_acceleration(x, y, z)
 
     return x, y, z, t
@@ -183,6 +241,18 @@ def process_acceleration_data(sensor_data):
 
 def resample_data(x_acc, y_acc, z_acc, t_acc, x_gyo, y_gyo, z_gyo, t_gyo):
 
+    """
+    Resamples the sensor data
+    :param x_acc: raw acceleration data x-axis
+    :param y_acc: raw acceleration data y-axis
+    :param z_acc: raw acceleration data z-axis
+    :param t_acc: timestamp of the acceleration data x-axis
+    :param x_gyo: raw gyroscope data x-axis
+    :param y_gyo: raw gyroscope data y-axis
+    :param z_gyo: raw gyroscope data z-axis
+    :param t_gyo: timestamp of the gyroscope data
+    :return: the resampled acceleration and gyroscope data
+    """
     t_begin = max(t_acc[0], t_gyo[0])
     t_end = min(t_acc[-1], t_gyo[-1])
 
@@ -210,6 +280,12 @@ def resample_data(x_acc, y_acc, z_acc, t_acc, x_gyo, y_gyo, z_gyo, t_gyo):
 
 
 def process_data(acceleration_data, gyroscope_data):
+    """
+    Processes the acceleration and gyroscope data
+    :param acceleration_data: The raw acceleration data
+    :param gyroscope_data: The raw gyroscope data
+    :return: the processed data
+    """
     x_acc = []
     y_acc = []
     z_acc = []

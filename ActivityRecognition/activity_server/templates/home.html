@@ -294,7 +294,7 @@
 
             $.ajax(
                     {
-                        url: 'http://localhost:55555/ac/',
+                        url: 'http://89.216.30.67:55555/ac/',
                         type: 'POST',
                         processData: false,
                         contentType: 'application/json; charset=utf-8',
@@ -313,6 +313,13 @@
                     });
         }
 
+
+        function repeat_request()
+        {
+            setInterval(function(){ test_get() }, 3000);
+            //test_get();
+        }
+
     </script>
 
     <script type="text/javascript">
@@ -323,11 +330,10 @@
 
             var curr_act = document.getElementById("current_activity");
 
-            alert('uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set + '&tp=' + tp+ "&curr_act=" + curr_act.checked);
             $.ajax({
-                        url: 'http://localhost:55555/ac/',
+                        url: 'http://89.216.30.67:55555/ac/',
                         type: 'GET',
-                        data: 'uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set + '&tp=' + tp+ "&curr_act=" + curr_act.checked,
+                        data: 'uuid=46cf6430e66df4b4&alg=' + algorithm + '&fs=' + feature_set  + "&curr_act=" + curr_act.checked,
                         async: false,
                         complete: function (result) {
                             if (result.status == 0) {
@@ -335,7 +341,9 @@
                             } else if (result.status == 404) {
                                 alert('404 - not found');
                             } else {
-                                alert(result.responseText);
+                                //alert(result.responseText);
+                                var output = document.getElementById("output");
+                                output.innerHTML = result.responseText;
                             }
                         }
                     });
@@ -362,7 +370,7 @@
 <div id="resultDivContainer"></div>
 
 <button type="button" onclick="test_post()">Test REST Post</button>
-<button type="button" onclick="test_get()">Test REST Get</button>
+<button type="button" onclick="repeat_request()">Test REST Get</button>
 
 <label>
     <select onchange="set_algorithm(this.value)">
@@ -377,6 +385,8 @@
         <option value="enhanced">Extended Feature Set</option>
     </select>
 </label>
+
+<p id="output">This is where the output is</p>
 
 <input id="delta_time" type="text" name="delta_time" value="10"><br>
 Current activity: <input id="current_activity" type="checkbox">

@@ -70,12 +70,15 @@ class RESTView(View):
             if algorithm == 'svm':
                 response_text += '"svm_vector" : {'
                 reduced_vec = reduce_activity_vector(record['vector'])
+                #reduced_vec = record['vector']
 
                 for i in xrange(len(reduced_vec)):
                     if i != len(reduced_vec) - 1:
                         response_text += '"%s":"%s",' % (reduced_activity_table_json.get(i+1), reduced_vec[i])
+                        #response_text += '"%s":"%s",' % (activity_table.get(i+1), reduced_vec[i])
                     else:
                         response_text += '"%s":"%s"}' % (reduced_activity_table_json.get(i+1), reduced_vec[i])
+                        #response_text += '"%s":"%s"}' % (activity_table.get(i+1), reduced_vec[i])
             else:
                 index = np.argmax(record['vector']) + 1
                 response_text += '"dt_category" : "%s"' % activity_table_json.get(index)
